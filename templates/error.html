@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="logo">
+    <h1>Error</h1>
+</div>
+
+<div class="card error-card">
+    <div class="error-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+    </div>
+    
+    <div class="error-message">
+        <h2>Oops! Something went wrong</h2>
+        <p>{{ error_message }}</p>
+    </div>
+    
+    <div class="error-actions">
+        <a href="/" class="btn btn-primary">Return to Home</a>
+        <button onclick="history.back()" class="btn btn-secondary">Go Back</button>
+    </div>
+</div>
+
+<style>
+    .error-card {
+        text-align: center;
+        padding: 2rem;
+        max-width: 600px;
+        margin: 0 auto;
+    }
+    
+    .error-icon {
+        color: #ef4444;
+        margin-bottom: 1.5rem;
+    }
+    
+    .error-message {
+        margin-bottom: 2rem;
+    }
+    
+    .error-message h2 {
+        color: #ef4444;
+        margin-bottom: 1rem;
+    }
+    
+    .error-actions {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+    }
+    
+    .btn {
+        padding: 0.75rem 1.5rem;
+        border-radius: 0.5rem;
+        font-weight: 600;
+        transition: all 0.2s ease;
+        text-decoration: none;
+        display: inline-block;
+    }
+    
+    .btn-primary {
+        background: var(--primary-color);
+        color: white;
+    }
+    
+    .btn-primary:hover {
+        opacity: 0.9;
+        transform: translateY(-2px);
+    }
+    
+    .btn-secondary {
+        background: rgba(255, 255, 255, 0.1);
+        color: var(--text-color);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        cursor: pointer;
+    }
+    
+    .btn-secondary:hover {
+        background: rgba(255, 255, 255, 0.2);
+        transform: translateY(-2px);
+    }
+    
+    @media (max-width: 768px) {
+        .error-actions {
+            flex-direction: column;
+        }
+        
+        .btn {
+            width: 100%;
+        }
+    }
+</style>
+{% endblock %} 

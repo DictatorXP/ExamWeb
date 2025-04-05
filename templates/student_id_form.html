@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="logo">
+    <h1>Student ID Required</h1>
+</div>
+
+<div class="card">
+    <div class="form-container">
+        <p class="message">Please enter your Student ID to access the exam.</p>
+        
+        <form id="studentIdForm" class="student-form">
+            <div class="form-group">
+                <label for="student_id">Student ID</label>
+                <input 
+                    type="text" 
+                    id="student_id" 
+                    name="student_id" 
+                    placeholder="Enter your Student ID"
+                    required
+                >
+            </div>
+            
+            <div class="error-message" id="errorMessage" style="display: none;"></div>
+            
+            <button type="submit" class="btn btn-primary">Continue to Exam</button>
+        </form>
+    </div>
+</div>
+
+<style>
+    .form-container {
+        max-width: 400px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+    
+    .message {
+        text-align: center;
+        margin-bottom: 2rem;
+        color: var(--text-color);
+    }
+    
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        color: var(--text-color);
+    }
+    
+    .form-group input {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 0.5rem;
+        background: rgba(255, 255, 255, 0.1);
+        color: var(--text-color);
+        font-size: 1rem;
+    }
+    
+    .form-group input:focus {
+        outline: none;
+        border-color: var(--primary-color);
+    }
+    
+    .error-message {
+        color: #ef4444;
+        margin-bottom: 1rem;
+        text-align: center;
+    }
+    
+    .btn {
+        width: 100%;
+        padding: 0.75rem;
+        border: none;
+        border-radius: 0.5rem;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    
+    .btn-primary {
+        background: var(--primary-color);
+        color: white;
+    }
+    
+    .btn-primary:hover {
+        opacity: 0.9;
+        transform: translateY(-2px);
+    }
+</style>
+
+<script>
+document.getElementById('studentIdForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const studentId = document.getElementById('student_id').value;
+    const errorMessage = document.getElementById('errorMessage');
+    
+    try {
+        // First check if the student ID is valid
+        const response = await fetch(`/api/exam?student_id=${studentId}`);
+        const data = await response.json();
+        
+        if (response.ok) {
+            // If valid, redirect to the exam page
+            window.location.href = `/exam?student_id=${studentId}`;
+        } else {
+            // Show error message
+            errorMessage.textContent = data.error || 'An error occurred. Please try again.';
+            errorMessage.style.display = 'block';
+        }
+    } catch (error) {
+        errorMessage.textContent = 'An error occurred. Please try again.';
+        errorMessage.style.display = 'block';
+    }
+});
+</script>
+{% endblock %} 

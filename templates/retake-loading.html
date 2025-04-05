@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h3 class="mb-0">Exam Retake Request</h3>
+        </div>
+        <div class="card-body text-center">
+            <h4 class="mb-4">Waiting for Admin Approval</h4>
+            
+            <div class="student-info mb-4">
+                <p><strong>Student ID:</strong> {{ student_id }}</p>
+                <p><strong>Name:</strong> {{ student_name }}</p>
+                <p><strong>Surname:</strong> {{ student_surname }}</p>
+            </div>
+            
+            <div id="loading-spinner" class="mb-4">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-2" id="status-message">Checking approval status...</p>
+            </div>
+            
+            <div id="approval-message" style="display: none;">
+                <div class="alert" role="alert"></div>
+                <div id="action-buttons" style="display: none;">
+                    <a href="/exam?student_id={{ student_id }}" class="btn btn-primary">Start Retake</a>
+                    <a href="/" class="btn btn-secondary">Return to Home</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+async function checkRetakeStatus() {
+    try {
+        const response = await fetch('/check-retake-approval/{{ student_id }}');
+        const data = await response.json();
+        
+        const messageDiv = document.querySelector('#approval-message .alert');
+        const actionButtons = document.querySelector('#action-buttons');
+        
+        if (data.status === 'approved') {
+            document.getElementById('loading-spinner').style.display = 'none';
+            document.getElementById('approval-message').style.display = 'block';
+            messageDiv.className = 'alert alert-success';
+            messageDiv.textContent = 'Your retake request has been approved! You can now take the exam again.';
+            actionButtons.style.display = 'block';
+            return true;
+        } else if (data.status === 'rejected') {
+            document.getElementById('loading-spinner').style.display = 'none';
+            document.getElementById('approval-message').style.display = 'block';
+            messageDiv.className = 'alert alert-danger';
+            messageDiv.textContent = 'Your retake request has been rejected.';
+            actionButtons.querySelector('.btn-primary').style.display = 'none';
+            actionButtons.style.display = 'block';
+            return true;
+        } else if (data.status === 'error') {
+            document.getElementById('loading-spinner').style.display = 'none';
+            document.getElementById('approval-message').style.display = 'block';
+            messageDiv.className = 'alert alert-danger';
+            messageDiv.textContent = data.message;
+            return true;
+        }
+        
+        // Update the status message
+        document.getElementById('status-message').textContent = data.message;
+        return false;
+        
+    } catch (error) {
+        console.error('Error checking retake status:', error);
+        document.getElementById('status-message').textContent = 'Error checking status. Please refresh the page.';
+        return false;
+    }
+}
+
+// Check status every 3 seconds
+async function pollStatus() {
+    const finished = await checkRetakeStatus();
+    if (!finished) {
+        setTimeout(pollStatus, 3000);
+    }
+}
+
+// Start polling when the page loads
+document.addEventListener('DOMContentLoaded', pollStatus);
+</script>
+
+<style>
+.card {
+    max-width: 600px;
+    margin: 0 auto;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+}
+
+.student-info {
+    background-color: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+}
+
+.spinner-border {
+    width: 3rem;
+    height: 3rem;
+}
+
+#action-buttons {
+    margin-top: 20px;
+}
+
+#action-buttons .btn {
+    margin: 0 10px;
+}
+
+.alert {
+    margin-bottom: 20px;
+}
+</style>
+{% endblock %} 

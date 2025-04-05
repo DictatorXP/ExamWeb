@@ -1,0 +1,176 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="exam-container">
+    <div class="exam-header">
+        <h1>Online Exam</h1>
+        <div class="student-info">
+            <p>Student ID: <span id="student-id">{{ student_id }}</span></p>
+            <p>Name: {{ student_name }} {{ student_surname }}</p>
+        </div>
+    </div>
+
+
+
+    <form id="exam-form" action="/submit-exam" method="post">
+        <input type="hidden" name="student_id" value="{{ student_id }}">
+        <input type="hidden" name="answers" id="answers-input">
+        
+        <div id="questions-container">
+           
+        </div>
+
+        <div class="exam-navigation">
+            <button type="submit" id="submit-btn" class="btn btn-success">Submit Exam</button>
+        </div>
+    </form>
+</div>
+
+<style>
+.exam-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.exam-header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.exam-instructions {
+    background-color: #f8f9fa;
+    padding: 20px;
+    border-radius: 5px;
+    margin-bottom: 30px;
+}
+
+.exam-instructions ul {
+    margin-bottom: 0;
+}
+
+.question {
+    margin-bottom: 30px;
+    padding: 20px;
+    border: 1px solid #dee2e6;
+    border-radius: 5px;
+}
+
+.question-text {
+    font-weight: bold;
+    margin-bottom: 15px;
+}
+
+.options {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.option {
+    padding: 10px 15px;
+    border: 1px solid #dee2e6;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.option:hover {
+    background-color: #f8f9fa;
+}
+
+.option.selected {
+    background-color: #007bff;
+    color: white;
+    border-color: #0056b3;
+}
+
+.exam-navigation {
+    display: flex;
+    justify-content: center;
+    margin-top: 30px;
+}
+
+.btn {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.btn-success {
+    background-color: #28a745;
+    color: white;
+}
+
+.btn-success:hover {
+    background-color: #218838;
+}
+</style>
+
+<script>
+let questions = [];
+let answers = {};
+
+
+document.addEventListener('DOMContentLoaded', async () => {
+    try {
+        const response = await fetch('/api/exam');
+        const data = await response.json();
+        
+        if (data.error) {
+            alert(data.error);
+            return;
+        }
+        
+        questions = data.questions;
+        displayQuestions();
+    } catch (error) {
+        console.error('Error loading questions:', error);
+        alert('Failed to load questions. Please try again.');
+    }
+});
+
+function displayQuestions() {
+    const container = document.getElementById('questions-container');
+    let questionsHTML = '';
+    
+    questions.forEach((question, index) => {
+        questionsHTML += `
+            <div class="question">
+                <div class="question-text">${index + 1}. ${question.text}</div>
+                <div class="options">
+                    ${question.options.map(opt => `
+                        <div class="option ${answers[question.id] === opt.id ? 'selected' : ''}" 
+                             onclick="selectOption(${question.id}, '${opt.id}')">
+                            ${opt.id}. ${opt.text}
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+    });
+    
+    container.innerHTML = questionsHTML;
+}
+
+function selectOption(questionId, optionId) {
+    answers[questionId] = optionId;
+    document.getElementById('answers-input').value = JSON.stringify(answers);
+    displayQuestions();
+}
+
+document.getElementById('exam-form').addEventListener('submit', (e) => {
+    if (Object.keys(answers).length < questions.length) {
+        e.preventDefault();
+        alert('Please answer all questions before submitting.');
+        return;
+    }
+    
+    document.getElementById('answers-input').value = JSON.stringify(answers);
+});
+</script>
+{% endblock %} 

@@ -1,0 +1,191 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card">
+    <div class="loading-container">
+        <div class="spinner"></div>
+        <h2 id="status-message">Waiting for admin approval...</h2>
+        <p id="error-message" class="error-message"></p>
+        <button id="retry-button" class="retry-button" style="display: none;" onclick="retrySubmission()">Try Again</button>
+    </div>
+</div>
+
+<style>
+.loading-container {
+    text-align: center;
+    padding: 2rem;
+}
+
+.spinner {
+    width: 50px;
+    height: 50px;
+    border: 5px solid var(--card-bg);
+    border-top: 5px solid var(--primary-color);
+    border-radius: 50%;
+    margin: 0 auto 1rem;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+#status-message {
+    color: var(--text-color);
+    margin-top: 1rem;
+}
+
+.error-message {
+    color: #ef4444;
+    margin-top: 1rem;
+    display: none;
+}
+
+.status-approved {
+    color: #10b981;
+}
+
+.status-rejected {
+    color: #ef4444;
+}
+
+.retry-button {
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    margin-top: 1rem;
+    cursor: pointer;
+    display: none;
+}
+
+.retry-button:hover {
+    opacity: 0.9;
+}
+</style>
+
+<script>
+const studentId = "{{ student_id }}";
+const checkInterval = 2000; // Check every 2 seconds
+let checkCount = 0;
+const maxChecks = 150; // 5 minutes maximum wait time
+let intervalId = null;
+let isRedirecting = false;
+
+function showError(message, showRetry = true) {
+    console.error('Error:', message);
+    document.getElementById('error-message').textContent = message;
+    document.getElementById('error-message').style.display = 'block';
+    document.querySelector('.spinner').style.display = 'none';
+    if (showRetry) {
+        document.getElementById('retry-button').style.display = 'inline-block';
+    }
+    if (intervalId) {
+        clearInterval(intervalId);
+    }
+}
+
+function retrySubmission() {
+    // Reset UI
+    document.getElementById('error-message').style.display = 'none';
+    document.getElementById('retry-button').style.display = 'none';
+    document.querySelector('.spinner').style.display = 'block';
+    document.getElementById('status-message').textContent = 'Waiting for admin approval...';
+    document.getElementById('status-message').className = '';
+    document.querySelector('.spinner').style.borderTopColor = 'var(--primary-color)';
+    
+    // Reset counters and flags
+    checkCount = 0;
+    isRedirecting = false;
+    
+    // Restart checking
+    checkApprovalStatus();
+    intervalId = setInterval(checkApprovalStatus, checkInterval);
+}
+
+async function checkApprovalStatus() {
+    if (isRedirecting) return; // Prevent multiple redirects
+    
+    try {
+        checkCount++;
+        console.log(`Checking status (attempt ${checkCount})...`);
+        
+        const response = await fetch(`/check-approval/${studentId}`);
+        
+        // Try to parse the response as JSON
+        let data;
+        try {
+            data = await response.json();
+        } catch (e) {
+            console.error('Failed to parse response as JSON:', e);
+            throw new Error('Server returned an invalid response format');
+        }
+        
+        // Handle different response statuses
+        if (!response.ok) {
+            // Server returned an error with a message
+            const errorMessage = data.detail || data.message || `Server error: ${response.status}`;
+            console.error('Server error:', errorMessage);
+            showError(`Error: ${errorMessage}`);
+            return;
+        }
+        
+        console.log(`Status check ${checkCount}:`, data);
+        
+        if (data.status === 'approved') {
+            isRedirecting = true;
+            
+            // Stop checking
+            if (intervalId) {
+                clearInterval(intervalId);
+            }
+            
+            // Update UI
+            document.getElementById('status-message').textContent = 'Approved! Redirecting to exam...';
+            document.getElementById('status-message').classList.add('status-approved');
+            document.querySelector('.spinner').style.borderTopColor = '#10b981';
+            
+            // Redirect after a short delay
+            setTimeout(() => {
+                window.location.href = '/exam';
+            }, 1000);
+        } else if (data.status === 'rejected') {
+            isRedirecting = true;
+            
+            // Stop checking
+            if (intervalId) {
+                clearInterval(intervalId);
+            }
+            
+            // Update UI
+            document.getElementById('status-message').textContent = 'Request rejected. Redirecting to home...';
+            document.getElementById('status-message').classList.add('status-rejected');
+            document.querySelector('.spinner').style.borderTopColor = '#ef4444';
+            
+            // Redirect after showing the message
+            setTimeout(() => {
+                window.location.href = '/';
+            }, 2000);
+        } else if (checkCount >= maxChecks) {
+            showError('The approval process is taking longer than expected. Please try again later.');
+        }
+    } catch (error) {
+        console.error('Error checking status:', error);
+        showError(`Error: ${error.message || 'Network error. Please check your connection and try again.'}`);
+    }
+}
+
+// Start checking status immediately and then at intervals
+checkApprovalStatus();
+intervalId = setInterval(checkApprovalStatus, checkInterval);
+
+// Clean up interval when leaving the page
+window.addEventListener('beforeunload', () => {
+    if (intervalId) {
+        clearInterval(intervalId);
+    }
+});
+</script>
+{% endblock %} 

@@ -1,0 +1,307 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="results-container">
+    <div class="results-header">
+        <h1>Exam Results</h1>
+        <div class="student-info">
+            <p>Student ID: <span id="student-id">{{ student_id }}</span></p>
+            <p>Name: {{ student_name }} {{ student_surname }}</p>
+        </div>
+    </div>
+
+    <div class="results-summary">
+        <div class="score-card">
+            <h2>Your Score</h2>
+            <div class="score">
+                <span class="score-number">{{ correct_answers }}</span>
+                <span class="score-total">/ {{ total_questions }}</span>
+            </div>
+            <div class="score-percentage">
+                {{ (correct_answers / total_questions * 100) | round(1) }}%
+            </div>
+        </div>
+        
+        <div class="stats">
+            <div class="stat correct">
+                <span class="stat-label">Correct Answers:</span>
+                <span class="stat-value">{{ correct_answers }}</span>
+            </div>
+            <div class="stat incorrect">
+                <span class="stat-label">Incorrect Answers:</span>
+                <span class="stat-value">{{ incorrect_answers }}</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="results-details">
+        <h2>Question Details</h2>
+        <div class="questions-list">
+            {% for question in questions %}
+            <div class="question-item {% if question.is_correct %}correct{% else %}incorrect{% endif %}">
+                <div class="question-header">
+                    <span class="question-number">Question {{ loop.index }}</span>
+                    <span class="question-status">
+                        {% if question.is_correct %}
+                        <span class="status-icon correct">✓</span>
+                        {% else %}
+                        <span class="status-icon incorrect">✗</span>
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="question-text">{{ question.text }}</div>
+                <div class="question-answers">
+                    <div class="answer-section">
+                        <div class="answer-row your-answer">
+                            <span class="answer-label">Your Answer:</span>
+                            <span class="answer-value {% if question.is_correct %}correct-text{% else %}incorrect-text{% endif %}">
+                                {{ question.student_answer }}
+                            </span>
+                        </div>
+                        {% if not question.is_correct %}
+                        <div class="answer-row correct-answer">
+                            <span class="answer-label">Correct Answer:</span>
+                            <span class="answer-value correct-text">{{ question.correct_answer }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="results-actions">
+        <a href="/" class="btn btn-primary">Return to Home</a>
+    </div>
+</div>
+
+<style>
+.results-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+    font-family: Arial, sans-serif;
+}
+
+.results-header {
+    text-align: center;
+    margin-bottom: 30px;
+    background-color: #f8f9fa;
+    padding: 20px;
+    border-radius: 10px;
+}
+
+.results-header h1 {
+    color: #2c3e50;
+    margin-bottom: 15px;
+}
+
+.student-info {
+    font-size: 1.1em;
+    color: #34495e;
+}
+
+.results-summary {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 40px;
+}
+
+.score-card {
+    background-color: #f8f9fa;
+    border-radius: 10px;
+    padding: 20px;
+    text-align: center;
+    width: 200px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.score {
+    font-size: 36px;
+    font-weight: bold;
+    margin: 10px 0;
+}
+
+.score-number {
+    color: #28a745;
+}
+
+.score-total {
+    color: #6c757d;
+}
+
+.score-percentage {
+    font-size: 24px;
+    color: #28a745;
+    font-weight: bold;
+}
+
+.stats {
+    display: flex;
+    gap: 20px;
+}
+
+.stat {
+    padding: 15px 25px;
+    border-radius: 8px;
+    font-weight: bold;
+}
+
+.stat.correct {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.stat.incorrect {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+.stat-label {
+    margin-right: 10px;
+}
+
+.results-details {
+    margin-bottom: 30px;
+}
+
+.results-details h2 {
+    color: #2c3e50;
+    margin-bottom: 20px;
+}
+
+.questions-list {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.question-item {
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 20px;
+    background-color: #fff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.question-item.correct {
+    border-left: 5px solid #28a745;
+}
+
+.question-item.incorrect {
+    border-left: 5px solid #dc3545;
+}
+
+.question-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eee;
+}
+
+.question-number {
+    font-size: 1.1em;
+    font-weight: bold;
+    color: #2c3e50;
+}
+
+.status-icon {
+    display: inline-block;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    text-align: center;
+    line-height: 24px;
+    font-weight: bold;
+}
+
+.status-icon.correct {
+    background-color: #28a745;
+    color: white;
+}
+
+.status-icon.incorrect {
+    background-color: #dc3545;
+    color: white;
+}
+
+.question-text {
+    font-size: 1.1em;
+    margin-bottom: 20px;
+    color: #2c3e50;
+    line-height: 1.5;
+}
+
+.question-answers {
+    background-color: #f8f9fa;
+    padding: 15px;
+    border-radius: 5px;
+}
+
+.answer-section {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.answer-row {
+    display: flex;
+    align-items: flex-start;
+    padding: 10px;
+    background-color: white;
+    border-radius: 5px;
+}
+
+.answer-label {
+    font-weight: bold;
+    margin-right: 15px;
+    min-width: 120px;
+    color: #2c3e50;
+}
+
+.answer-value {
+    flex: 1;
+    line-height: 1.4;
+}
+
+.correct-text {
+    color: #28a745;
+}
+
+.incorrect-text {
+    color: #dc3545;
+}
+
+.results-actions {
+    display: flex;
+    justify-content: center;
+    margin-top: 30px;
+}
+
+.btn {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.btn-primary {
+    background-color: #007bff;
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: #0056b3;
+}
+</style>
+{% endblock %} 
